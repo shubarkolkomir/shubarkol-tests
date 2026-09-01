@@ -2,7 +2,7 @@
 //   КОНФИГУРАЦИЯ
 // ══════════════════════════════════════════
 const TIME_LIMIT   = 120 * 60;     // 2 часа
-const PASS_PERCENT = 60;
+const PASS_PERCENT = 70;
 
 let isAuthorized = false;
 
@@ -276,13 +276,12 @@ async function loadQuestions(type) {
 function initTest() {
   clearInterval(timerInterval);
 
-  let questionCount = TEST_TYPES[currentTestType].isCommon 
-    ? TEST_TYPES[currentTestType].questionCount 
-    : (currentCategory === 'itr' 
-        ? QUIZ_COUNT.itr[currentTestType] 
-        : QUIZ_COUNT.worker[currentTestType]);
+  // Для 13 тестов:
+  // - если в базе 100 вопросов или больше — выдаём ровно 100 случайных;
+  // - если меньше 100 — выдаём все имеющиеся вопросы.
+  const questionCount = Math.min(100, ALL_QUESTIONS.length);
 
-  QUESTIONS = pickRandom(ALL_QUESTIONS, Math.min(questionCount, ALL_QUESTIONS.length));
+  QUESTIONS = pickRandom(ALL_QUESTIONS, questionCount);
   TOTAL     = QUESTIONS.length;
   current   = 0;
   answers   = new Array(TOTAL).fill(null);
@@ -383,7 +382,8 @@ function renderResult() {
   });
 
   const pct = keyed ? Math.round((correct / keyed) * 100) : 0;
-  const passed = keyed > 0 && pct >= PASS_PERCENT;
+  const requiredCorrect = keyed ? Math.ceil(keyed * PASS_PERCENT / 100) : 0;
+  const passed = keyed > 0 && correct >= requiredCorrect;
   const categoryName = TEST_TYPES[currentTestType].isCommon 
     ? TEST_TYPES[currentTestType].name 
     : (currentCategory === 'itr' ? 'ИТР' : 'Рабочие');
@@ -394,7 +394,11 @@ function renderResult() {
     ? '🎉 Поздравляем! Тест успешно пройден!' 
     : '😔 Тест не пройден';
 
-  const resultSub = keyed === 0 ? 'Ключи правильных ответов пока не загружены — добавим их позже.' : (passed ? `Отличный результат! Вы набрали ${pct}%` : `Набрано ${pct}%. Необходимо минимум ${PASS_PERCENT}% для сдачи.`);
+  const resultSub = keyed === 0
+    ? 'Ключи правильных ответов пока не загружены — добавим их позже.'
+    : (passed
+        ? `Отличный результат! Правильных ответов: ${correct} из ${keyed} (${pct}%). Проходной минимум: ${requiredCorrect}.`
+        : `Правильных ответов: ${correct} из ${keyed} (${pct}%). Для сдачи нужно минимум ${requiredCorrect} (${PASS_PERCENT}%).`);
 
   const reviewHTML = QUESTIONS.map((q, i) => {
     const userAns = answers[i];
