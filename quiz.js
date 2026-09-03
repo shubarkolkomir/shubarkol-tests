@@ -247,7 +247,7 @@ async function loadQuestions(type) {
 
     const filePath = './' + fileName;
 
-    const res = await fetch(filePath);
+    const res = await fetch(filePath, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     ALL_QUESTIONS = await res.json();
