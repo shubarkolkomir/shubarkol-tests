@@ -277,9 +277,8 @@ function initTest() {
   clearInterval(timerInterval);
 
   // Для 13 тестов:
-  // - если в базе 100 вопросов или больше — выдаём ровно 100 случайных;
-  // - если меньше 100 — выдаём все имеющиеся вопросы.
-  const questionCount = Math.min(100, ALL_QUESTIONS.length);
+  // Выдаём все вопросы, которые есть в базе выбранного теста.
+  const questionCount = ALL_QUESTIONS.length;
 
   QUESTIONS = pickRandom(ALL_QUESTIONS, questionCount);
   TOTAL     = QUESTIONS.length;
